@@ -29,6 +29,11 @@ const atletaSchema = new mongoose.Schema({
     default: null
   },
 
+  imagenPublicId: {
+    type: String,
+    default: null
+  },
+
 }, {
   timestamps: true
 });

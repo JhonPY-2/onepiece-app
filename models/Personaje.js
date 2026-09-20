@@ -32,6 +32,11 @@ imagen: {
     default: null
 },
 
+imagenPublicId: {
+    type: String,
+    default: null
+},
+
 
 habilidades: [String],
 arcos: [String],

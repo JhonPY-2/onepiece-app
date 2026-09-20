@@ -11,7 +11,7 @@ function subirImagen(buffer) {
             (error, resultado) => {
 
                 if(error) return reject(error);
-                    resolve(resultado.secure_url);
+                    resolve({ url: resultado.secure_url, publicId: resultado.public_id });
                 }
 
             

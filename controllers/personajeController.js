@@ -1,13 +1,17 @@
 const Personaje = require('../models/Personaje');
 const subirImagen = require('../utils/subirImagen');
+const borrarImagen = require('../utils/borrarImagen');
 
 
 exports.crear = async (req, res) => {
     try {
         const datosPersonaje = {...req.body};
+        delete datosPersonaje.imagenPublicId;
         
         if(req.file){
-            datosPersonaje.imagen = await subirImagen(req.file.buffer);
+            const { url, publicId } = await subirImagen(req.file.buffer);
+            datosPersonaje.imagen = url;
+            datosPersonaje.imagenPublicId = publicId;
         }
     
         const nuevoPersonaje = new Personaje(datosPersonaje);
@@ -33,10 +37,22 @@ exports.obtenerTodos = async (req, res) => {
 exports.actualizar = async (req, res) => {
     try {
        
+        const personajePrevio = await Personaje.findById(req.params.id);
+
+        if (!personajePrevio) {
+            return res.status(404).json({ message: 'Personaje no encontrado' });
+        }
+
         const datosActualizados = {...req.body};
+        delete datosActualizados.imagenPublicId;
+
+        let publicIdAnterior = null;
 
         if (req.file){
-            datosActualizados.imagen = await subirImagen(req.file.buffer);
+            const { url, publicId } = await subirImagen(req.file.buffer);
+            datosActualizados.imagen = url;
+            datosActualizados.imagenPublicId = publicId;
+            publicIdAnterior = personajePrevio.imagenPublicId;
         }
 
 
@@ -45,8 +61,8 @@ exports.actualizar = async (req, res) => {
              datosActualizados, 
              { returnDocument: 'after', runValidators: true }); 
 
-        if (!personajeActualizado) {
-            return res.status(404).json({ message: 'Personaje no encontrado' });
+        if (publicIdAnterior) {
+            await borrarImagen(publicIdAnterior);
         }
 
         res.json(personajeActualizado);
@@ -63,6 +79,10 @@ exports.eliminar = async (req, res) => {
 
         if (!personajeEliminado) {
             return res.status(404).json({ message: 'Personaje no encontrado' });
+        }
+
+        if (personajeEliminado.imagenPublicId) {
+            await borrarImagen(personajeEliminado.imagenPublicId);
         }
 
         res.json({ message: 'Personaje eliminado correctamente', personaje: personajeEliminado });

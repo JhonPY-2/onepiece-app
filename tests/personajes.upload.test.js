@@ -9,11 +9,16 @@ const mongoose = require('mongoose');
 jest.mock('../utils/subirImagen');
 const subirImagen = require('../utils/subirImagen');
 
+// 2) Mock del borrado en Cloudinary: tampoco queremos borrar assets reales
+jest.mock('../utils/borrarImagen');
+const borrarImagen = require('../utils/borrarImagen');
+
 const app = require('../app');
 const Personaje = require('../models/Personaje');
 const conectarDB = require('../config/db');
 
 const URL_FALSA = 'https://res.cloudinary.com/demo/image/upload/luffy-test.png';
+const RESULTADO_SUBIDA = { url: URL_FALSA, publicId: 'onepiece-app/luffy-test' };
 
 describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
   let token;
@@ -29,7 +34,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
   });
 
   beforeEach(() => {
-    subirImagen.mockResolvedValue(URL_FALSA);
+    subirImagen.mockResolvedValue(RESULTADO_SUBIDA);
   });
 
   afterEach(() => {
@@ -99,6 +104,61 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
     expect(res.status).toBe(200);
     expect(subirImagen).toHaveBeenCalledTimes(1);
     expect(res.body.imagen).toBe(URL_FALSA);
+  });
+
+  test('PUT con foto nueva: sube la nueva y borra la imagen anterior con su publicId', async () => {
+    const personaje = await Personaje.create({
+      nombre: `Test Reemplazo ${Date.now()}`,
+      tripulacion: 'Test Crew',
+      imagen: URL_FALSA,
+      imagenPublicId: 'onepiece-app/public-anterior',
+    });
+    idsCreados.push(personaje._id.toString());
+
+    const res = await request(app)
+      .put(`/personajes/${personaje._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .field('nombre', personaje.nombre)
+      .field('tripulacion', 'Test Crew')
+      .attach('imagen', Buffer.from('contenido-falso'), 'nueva.png');
+
+    expect(res.status).toBe(200);
+    expect(subirImagen).toHaveBeenCalledTimes(1);
+    expect(borrarImagen).toHaveBeenCalledTimes(1);
+    expect(borrarImagen).toHaveBeenCalledWith('onepiece-app/public-anterior');
+    expect(res.body.imagen).toBe(URL_FALSA);
+    expect(res.body.imagenPublicId).toBe('onepiece-app/luffy-test');
+  });
+
+  test('DELETE: borra la imagen de Cloudinary con su publicId', async () => {
+    const personaje = await Personaje.create({
+      nombre: `Test Borrar ${Date.now()}`,
+      tripulacion: 'Test Crew',
+      imagen: URL_FALSA,
+      imagenPublicId: 'onepiece-app/public-eliminar',
+    });
+
+    const res = await request(app)
+      .delete(`/personajes/${personaje._id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(borrarImagen).toHaveBeenCalledTimes(1);
+    expect(borrarImagen).toHaveBeenCalledWith('onepiece-app/public-eliminar');
+  });
+
+  test('DELETE sin imagenPublicId: NO llama a borrarImagen', async () => {
+    const personaje = await Personaje.create({
+      nombre: `Test Sin PublicId ${Date.now()}`,
+      tripulacion: 'Test Crew',
+    });
+
+    const res = await request(app)
+      .delete(`/personajes/${personaje._id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(borrarImagen).not.toHaveBeenCalled();
   });
 
   test('POST con imagen mayor a 5MB: se rechaza y no se sube ni se crea nada', async () => {

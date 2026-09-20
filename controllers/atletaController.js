@@ -1,15 +1,19 @@
 const Atleta = require('../models/Atleta');
 const subirImagen = require('../utils/subirImagen');
+const borrarImagen = require('../utils/borrarImagen');
 
 exports.crear = async (req, res) => {
     try {
         
 
-     const datosAtleta = {...req.body}
+     const datosAtleta = {...req.body};
+        delete datosAtleta.imagenPublicId
      
      if(req.file){
 
-        datosAtleta.imagen = await subirImagen(req.file.buffer);
+        const { url, publicId } = await subirImagen(req.file.buffer);
+        datosAtleta.imagen = url;
+        datosAtleta.imagenPublicId = publicId;
 
      }
     
@@ -36,19 +40,31 @@ exports.obtenerTodos = async (req, res) => {
 exports.actualizar = async (req, res) => {
     try {
         
+        const atletaPrevio = await Atleta.findById(req.params.id);
+
+        if (!atletaPrevio) {
+            return res.status(404).json({ message: 'Atleta no encontrado' });
+        }
+
         const datosActualizados = {...req.body};
+        delete datosActualizados.imagenPublicId;
+
+        let publicIdAnterior = null;
 
         if(req.file){
 
-            datosActualizados.imagen = await subirImagen(req.file.buffer);
+            const { url, publicId } = await subirImagen(req.file.buffer);
+            datosActualizados.imagen = url;
+            datosActualizados.imagenPublicId = publicId;
+            publicIdAnterior = atletaPrevio.imagenPublicId;
             }
     const atletaActualizado = await Atleta.findByIdAndUpdate(
             req.params.id,
              datosActualizados, 
              { returnDocument: 'after', runValidators: true }); 
 
-        if (!atletaActualizado) {
-            return res.status(404).json({ message: 'Atleta no encontrado' });
+        if (publicIdAnterior) {
+            await borrarImagen(publicIdAnterior);
         }
 
         res.json(atletaActualizado);
@@ -65,6 +81,10 @@ exports.eliminar = async (req, res) => {
 
         if (!atletaEliminado) {
             return res.status(404).json({ message: 'Atleta no encontrado' });
+        }
+
+        if (atletaEliminado.imagenPublicId) {
+            await borrarImagen(atletaEliminado.imagenPublicId);
         }
 
         res.json({ message: 'Atleta eliminado correctamente', atleta: atletaEliminado });

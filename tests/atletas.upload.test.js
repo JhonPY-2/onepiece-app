@@ -5,15 +5,20 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
-// 1) Mock de la subida a Cloudinary (OJO: el archivo real se llama subriImagen)
+// 1) Mock de la subida a Cloudinary (OJO: el archivo real se llama subirImagen)
 jest.mock('../utils/subirImagen');
 const subirImagen = require('../utils/subirImagen');
+
+// 2) Mock del borrado en Cloudinary: tampoco queremos borrar assets reales
+jest.mock('../utils/borrarImagen');
+const borrarImagen = require('../utils/borrarImagen');
 
 const app = require('../app');
 const Atleta = require('../models/Atleta');
 const conectarDB = require('../config/db');
 
 const URL_FALSA = 'https://res.cloudinary.com/demo/image/upload/atleta-test.png';
+const RESULTADO_SUBIDA = { url: URL_FALSA, publicId: 'onepiece-app/atleta-test' };
 
 describe('Atletas - subida de imagen (Cloudinary mockeado)', () => {
   let token;
@@ -29,7 +34,7 @@ describe('Atletas - subida de imagen (Cloudinary mockeado)', () => {
   });
 
   beforeEach(() => {
-    subirImagen.mockResolvedValue(URL_FALSA);
+    subirImagen.mockResolvedValue(RESULTADO_SUBIDA);
   });
 
   afterEach(() => {
@@ -99,6 +104,61 @@ describe('Atletas - subida de imagen (Cloudinary mockeado)', () => {
     expect(res.status).toBe(200);
     expect(subirImagen).toHaveBeenCalledTimes(1);
     expect(res.body.imagen).toBe(URL_FALSA);
+  });
+
+  test('PUT con foto nueva: sube la nueva y borra la imagen anterior con su publicId', async () => {
+    const atleta = await Atleta.create({
+      nombre: `Test Reemplazo ${Date.now()}`,
+      equipo: 'Test Team',
+      imagen: URL_FALSA,
+      imagenPublicId: 'onepiece-app/public-anterior',
+    });
+    idsCreados.push(atleta._id.toString());
+
+    const res = await request(app)
+      .put(`/atletas/${atleta._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .field('nombre', atleta.nombre)
+      .field('equipo', 'Test Team')
+      .attach('imagen', Buffer.from('contenido-falso'), 'nueva.png');
+
+    expect(res.status).toBe(200);
+    expect(subirImagen).toHaveBeenCalledTimes(1);
+    expect(borrarImagen).toHaveBeenCalledTimes(1);
+    expect(borrarImagen).toHaveBeenCalledWith('onepiece-app/public-anterior');
+    expect(res.body.imagen).toBe(URL_FALSA);
+    expect(res.body.imagenPublicId).toBe('onepiece-app/atleta-test');
+  });
+
+  test('DELETE: borra la imagen de Cloudinary con su publicId', async () => {
+    const atleta = await Atleta.create({
+      nombre: `Test Borrar ${Date.now()}`,
+      equipo: 'Test Team',
+      imagen: URL_FALSA,
+      imagenPublicId: 'onepiece-app/public-eliminar',
+    });
+
+    const res = await request(app)
+      .delete(`/atletas/${atleta._id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(borrarImagen).toHaveBeenCalledTimes(1);
+    expect(borrarImagen).toHaveBeenCalledWith('onepiece-app/public-eliminar');
+  });
+
+  test('DELETE sin imagenPublicId: NO llama a borrarImagen', async () => {
+    const atleta = await Atleta.create({
+      nombre: `Test Sin PublicId ${Date.now()}`,
+      equipo: 'Test Team',
+    });
+
+    const res = await request(app)
+      .delete(`/atletas/${atleta._id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(borrarImagen).not.toHaveBeenCalled();
   });
 
   test('POST con imagen mayor a 5MB: responde 413 y no sube ni crea nada', async () => {
