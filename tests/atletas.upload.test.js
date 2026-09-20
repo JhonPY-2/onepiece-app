@@ -178,4 +178,22 @@ describe('Atletas - subida de imagen (Cloudinary mockeado)', () => {
     const enBD = await Atleta.findOne({ nombre });
     expect(enBD).toBeNull();
   });
+
+  test('POST con archivo que no es imagen: responde 415, no sube y no crea nada', async () => {
+    const nombre = `Test PDF ${Date.now()}`;
+
+    const res = await request(app)
+      .post('/atletas')
+      .set('Authorization', `Bearer ${token}`)
+      .field('nombre', nombre)
+      .field('equipo', 'Test Team')
+      .attach('imagen', Buffer.from('x'), 'documento.pdf');
+
+    expect(res.status).toBe(415);
+    expect(res.body.mensaje).toBe('Solo se aceptan imagenes JPEG, PNG o WebP');
+    expect(subirImagen).not.toHaveBeenCalled();
+
+    const enBD = await Atleta.findOne({ nombre });
+    expect(enBD).toBeNull();
+  });
 });

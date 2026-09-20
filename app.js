@@ -21,6 +21,9 @@ app.use("/estadisticas",estadisticasRoutes)
 
 
 app.use((err, req, res, next) => {
+  if (err.status === 415) {
+    return res.status(415).json({ mensaje: err.message });
+  }
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ mensaje: 'La imagen no puede superar los 5MB' });
