@@ -1,0 +1,53 @@
+name: onepiece
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: onepiece-mongo
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "27018:27017"
+
+  estadisticas:
+    build: ../onepiece-estadisticas
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/onepiece
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  backend:
+    build: .
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/onepiece
+      PORT: "3000"
+      ESTADISTICAS_URL: http://estadisticas:8000
+    depends_on:
+      mongo:
+        condition: service_healthy
+      estadisticas:
+        condition: service_started
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ../onepiece-frontend
+    environment:
+      API_URL_SERVER: http://backend:3000
+    depends_on:
+      - backend
+    ports:
+      - "3001:3001"
+
+volumes:
+  mongo_data:

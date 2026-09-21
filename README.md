@@ -108,6 +108,42 @@ npm run dev
 
 Abre http://localhost:3001.
 
+## Con Docker
+
+Clona los tres proyectos en carpetas hermanas con estos nombres:
+
+```
+git clone https://github.com/JhonPY-2/mongo-crud onepiece-app
+git clone https://github.com/JhonPY-2/mongo-crud-frontend onepiece-frontend
+git clone https://github.com/JhonPY-2/onepiece-estadisticas onepiece-estadisticas
+```
+
+Crea el `.env` del backend a partir del ejemplo y completa `JWT_SECRET` y las `CLOUDINARY_*` (el microservicio recibe su `MONGODB_URI` desde el compose):
+
+```
+cd onepiece-app
+copy .env.example .env   # en Linux o WSL: cp .env.example .env
+```
+
+Levanta todo desde `onepiece-app`:
+
+```
+docker compose up --build
+```
+
+Puertos publicados en el host:
+
+| Servicio | Puerto |
+|---|---|
+| Backend (Node) | 3000 |
+| Frontend (Next.js) | 3001 |
+| Microservicio (FastAPI) | 8000 |
+| MongoDB | 27018 (mapea a 27017 interno) |
+
+Abre http://localhost:3001; el navegador sigue llamando a `http://localhost:3000`. El compose le pasa al frontend la variable `API_URL_SERVER=http://backend:3000`, que usa para las peticiones que Next.js hace desde el servidor (si no estuviera definida, caería en `http://localhost:3000`).
+
+El MongoDB del compose usa el volumen con nombre `mongo_data` y **empieza vacío** (no toca tu Mongo local, que sigue en el 27017). Si quieres catalogo de ejemplo: `docker compose exec backend npm run seed`.
+
 ## Tests
 
 | Servicio | Comando | Resultado actual |
