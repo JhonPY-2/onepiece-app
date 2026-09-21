@@ -161,3 +161,10 @@ onepiece-estadisticas/   microservicio (Python)
 onepiece-frontend/       frontend (Next.js)
   src/app/  src/components/  src/hooks/  public/
 ```
+## Repositorios
+
+| Servicio | Repositorio |
+|---|---|
+| Backend (`onepiece-app`) | https://github.com/JhonPY-2/mongo-crud |
+| Frontend (`onepiece-frontend`) | https://github.com/JhonPY-2/mongo-crud-frontend |
+| Microservicio (`onepiece-estadisticas`) | https://github.com/JhonPY-2/onepiece-estadisticas |
