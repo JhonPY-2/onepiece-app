@@ -113,8 +113,8 @@ Abre http://localhost:3001.
 Clona los tres proyectos en carpetas hermanas con estos nombres:
 
 ```
-git clone https://github.com/JhonPY-2/mongo-crud onepiece-app
-git clone https://github.com/JhonPY-2/mongo-crud-frontend onepiece-frontend
+git clone https://github.com/JhonPY-2/onepiece-app onepiece-app
+git clone https://github.com/JhonPY-2/onepiece-frontend onepiece-frontend
 git clone https://github.com/JhonPY-2/onepiece-estadisticas onepiece-estadisticas
 ```
 
@@ -201,6 +201,6 @@ onepiece-frontend/       frontend (Next.js)
 
 | Servicio | Repositorio |
 |---|---|
-| Backend (`onepiece-app`) | https://github.com/JhonPY-2/mongo-crud |
-| Frontend (`onepiece-frontend`) | https://github.com/JhonPY-2/mongo-crud-frontend |
+| Backend (`onepiece-app`) | https://github.com/JhonPY-2/onepiece-app |
+| Frontend (`onepiece-frontend`) | https://github.com/JhonPY-2/onepiece-frontend |
 | Microservicio (`onepiece-estadisticas`) | https://github.com/JhonPY-2/onepiece-estadisticas |
