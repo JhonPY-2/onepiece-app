@@ -4,6 +4,7 @@ const personajesRoutes = require("./routes/personajes");
 const atletasRoutes = require("./routes/atletas");
 const authRoutes = require("./routes/auth");
 const estadisticasRoutes = require("./routes/estadisticas");
+const tripulacionesRoutes = require('./routes/tripulaciones_routes');
 const multer = require('multer');
 const app = express();
 
@@ -18,7 +19,7 @@ app.use("/personajes", personajesRoutes);
 app.use("/atletas", atletasRoutes);
 app.use("/auth", authRoutes);
 app.use("/estadisticas",estadisticasRoutes)
-
+app.use("/tripulaciones",tripulacionesRoutes)
 
 app.use((err, req, res, next) => {
   if (err.status === 415) {

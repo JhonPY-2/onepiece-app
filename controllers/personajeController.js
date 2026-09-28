@@ -1,11 +1,12 @@
 const Personaje = require('../models/Personaje');
 const subirImagen = require('../utils/subirImagen');
 const borrarImagen = require('../utils/borrarImagen');
+const normalizarPersonaje = require('../utils/normalizarPersonaje');
 
 
 exports.crear = async (req, res) => {
     try {
-        const datosPersonaje = {...req.body};
+        const datosPersonaje = normalizarPersonaje(req.body);
         delete datosPersonaje.imagenPublicId;
         
         if(req.file){
@@ -25,7 +26,7 @@ exports.crear = async (req, res) => {
 
 exports.obtenerTodos = async (req, res) => {
     try {
-        const personajes = await Personaje.find();
+        const personajes = await Personaje.find().populate('tripulacion');
         res.json(personajes);
     }
     catch (error) {
@@ -43,7 +44,7 @@ exports.actualizar = async (req, res) => {
             return res.status(404).json({ message: 'Personaje no encontrado' });
         }
 
-        const datosActualizados = {...req.body};
+        const datosActualizados = normalizarPersonaje(req.body);
         delete datosActualizados.imagenPublicId;
 
         let publicIdAnterior = null;
@@ -59,7 +60,7 @@ exports.actualizar = async (req, res) => {
      const personajeActualizado = await Personaje.findByIdAndUpdate(
             req.params.id,
              datosActualizados, 
-             { returnDocument: 'after', runValidators: true }); 
+             { returnDocument: 'after', runValidators: true }).populate('tripulacion') 
 
         if (publicIdAnterior) {
             await borrarImagen(publicIdAnterior);
@@ -95,7 +96,7 @@ exports.eliminar = async (req, res) => {
 
 exports.obtenerPorId = async (req, res) => {
   try {
-    const personaje = await Personaje.findById(req.params.id);
+    const personaje = await Personaje.findById(req.params.id).populate('tripulacion');
 
     if (!personaje) {
       return res.status(404).json({ error: 'Personaje no encontrado' });

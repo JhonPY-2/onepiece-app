@@ -1,10 +1,13 @@
+const mongoose = require('mongoose');
 const Personaje = require('../models/Personaje');
+
+const TRIPULACION_PRUEBA = new mongoose.Types.ObjectId();
 
 describe('Modelo Personaje - validaciones', () => {
 
   test('debe fallar si falta el nombre', async () => {
     const personaje = new Personaje({
-      tripulacion: 'Piratas de Sombrero de Paja'
+      tripulacion: TRIPULACION_PRUEBA
     });
 
     const error = await personaje.validate().catch((e) => e);
@@ -25,7 +28,7 @@ describe('Modelo Personaje - validaciones', () => {
   test('debe pasar la validacion con los campos requeridos', async () => {
     const personaje = new Personaje({
       nombre: 'Luffy',
-      tripulacion: 'Piratas de Sombrero de Paja'
+      tripulacion: TRIPULACION_PRUEBA
     });
 
     const error = await personaje.validate().catch((e) => e);
@@ -36,7 +39,7 @@ describe('Modelo Personaje - validaciones', () => {
   test('recompensa debe tener valor por defecto 0', async () => {
     const personaje = new Personaje({
       nombre: 'Luffy',
-      tripulacion: 'Piratas de Sombrero de Paja'
+      tripulacion: TRIPULACION_PRUEBA
     });
 
     expect(personaje.recompensa).toBe(0);
@@ -45,7 +48,7 @@ describe('Modelo Personaje - validaciones', () => {
   test('frutaDiablo.despertada debe tener valor por defecto false', async () => {
     const personaje = new Personaje({
       nombre: 'Luffy',
-      tripulacion: 'Piratas de Sombrero de Paja'
+      tripulacion: TRIPULACION_PRUEBA
     });
 
     expect(personaje.frutaDiablo.despertada).toBe(false);

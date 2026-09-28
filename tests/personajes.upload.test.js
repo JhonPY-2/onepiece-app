@@ -19,6 +19,7 @@ const conectarDB = require('../config/db');
 
 const URL_FALSA = 'https://res.cloudinary.com/demo/image/upload/luffy-test.png';
 const RESULTADO_SUBIDA = { url: URL_FALSA, publicId: 'onepiece-app/luffy-test' };
+const TRIPULACION_PRUEBA = new mongoose.Types.ObjectId().toString();
 
 describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
   let token;
@@ -51,7 +52,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
       .post('/personajes')
       .set('Authorization', `Bearer ${token}`)
       .field('nombre', `Test Upload ${Date.now()}`)
-      .field('tripulacion', 'Test Crew')
+      .field('tripulacion', TRIPULACION_PRUEBA)
       .attach('imagen', Buffer.from('contenido-falso'), 'foto.png');
 
     expect(res.status).toBe(201);
@@ -66,7 +67,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
       .post('/personajes')
       .set('Authorization', `Bearer ${token}`)
       .field('nombre', `Test Sin Foto ${Date.now()}`)
-      .field('tripulacion', 'Test Crew');
+      .field('tripulacion', TRIPULACION_PRUEBA);
 
     expect(res.status).toBe(201);
     idsCreados.push(res.body._id);
@@ -79,7 +80,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
     const res = await request(app)
       .post('/personajes')
       .field('nombre', 'No Deberia Crearse')
-      .field('tripulacion', 'Test Crew')
+      .field('tripulacion', TRIPULACION_PRUEBA)
       .attach('imagen', Buffer.from('contenido-falso'), 'foto.png');
 
     expect(res.status).toBe(401);
@@ -90,7 +91,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
     // Primero creamos un personaje sin foto directamente en la BD
     const personaje = await Personaje.create({
       nombre: `Test Editar ${Date.now()}`,
-      tripulacion: 'Test Crew',
+      tripulacion: TRIPULACION_PRUEBA,
     });
     idsCreados.push(personaje._id.toString());
 
@@ -98,7 +99,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
       .put(`/personajes/${personaje._id}`)
       .set('Authorization', `Bearer ${token}`)
       .field('nombre', personaje.nombre)
-      .field('tripulacion', 'Test Crew')
+      .field('tripulacion', TRIPULACION_PRUEBA)
       .attach('imagen', Buffer.from('contenido-falso'), 'nueva.png');
 
     expect(res.status).toBe(200);
@@ -109,7 +110,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
   test('PUT con foto nueva: sube la nueva y borra la imagen anterior con su publicId', async () => {
     const personaje = await Personaje.create({
       nombre: `Test Reemplazo ${Date.now()}`,
-      tripulacion: 'Test Crew',
+      tripulacion: TRIPULACION_PRUEBA,
       imagen: URL_FALSA,
       imagenPublicId: 'onepiece-app/public-anterior',
     });
@@ -119,7 +120,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
       .put(`/personajes/${personaje._id}`)
       .set('Authorization', `Bearer ${token}`)
       .field('nombre', personaje.nombre)
-      .field('tripulacion', 'Test Crew')
+      .field('tripulacion', TRIPULACION_PRUEBA)
       .attach('imagen', Buffer.from('contenido-falso'), 'nueva.png');
 
     expect(res.status).toBe(200);
@@ -133,7 +134,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
   test('DELETE: borra la imagen de Cloudinary con su publicId', async () => {
     const personaje = await Personaje.create({
       nombre: `Test Borrar ${Date.now()}`,
-      tripulacion: 'Test Crew',
+      tripulacion: TRIPULACION_PRUEBA,
       imagen: URL_FALSA,
       imagenPublicId: 'onepiece-app/public-eliminar',
     });
@@ -150,7 +151,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
   test('DELETE sin imagenPublicId: NO llama a borrarImagen', async () => {
     const personaje = await Personaje.create({
       nombre: `Test Sin PublicId ${Date.now()}`,
-      tripulacion: 'Test Crew',
+      tripulacion: TRIPULACION_PRUEBA,
     });
 
     const res = await request(app)
@@ -169,7 +170,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
       .post('/personajes')
       .set('Authorization', `Bearer ${token}`)
       .field('nombre', nombre)
-      .field('tripulacion', 'Test Crew')
+      .field('tripulacion', TRIPULACION_PRUEBA)
       .attach('imagen', grande, 'grande.png');
 
     expect(res.status).toBe(413);
@@ -186,7 +187,7 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
       .post('/personajes')
       .set('Authorization', `Bearer ${token}`)
       .field('nombre', nombre)
-      .field('tripulacion', 'Test Crew')
+      .field('tripulacion', TRIPULACION_PRUEBA)
       .attach('imagen', Buffer.from('x'), 'documento.pdf');
 
     expect(res.status).toBe(415);
@@ -197,4 +198,3 @@ describe('Personajes - subida de imagen (Cloudinary mockeado)', () => {
     expect(enBD).toBeNull();
   });
 });
-

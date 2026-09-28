@@ -13,6 +13,8 @@ const tokenValido = jwt.sign(
   { expiresIn: '1h' }
 );
 
+const TRIPULACION_PRUEBA = new mongoose.Types.ObjectId();
+
 let idPersonajeCreado;
 
 beforeAll(async () => {
@@ -38,7 +40,7 @@ describe('Rutas de Personajes - integracion', () => {
   test('POST /personajes sin token debe fallar con 401', async () => {
     const respuesta = await request(app)
       .post('/personajes')
-      .send({ nombre: 'Test Jest', tripulacion: 'Prueba' });
+      .send({ nombre: 'Test Jest', tripulacion: TRIPULACION_PRUEBA });
 
     expect(respuesta.status).toBe(401);
     expect(respuesta.body.error).toBe('No autorizado, falta token');
@@ -48,7 +50,7 @@ describe('Rutas de Personajes - integracion', () => {
     const respuesta = await request(app)
       .post('/personajes')
       .set('Authorization', `Bearer ${tokenValido}`)
-      .send({ nombre: 'Test Jest', tripulacion: 'Prueba' });
+      .send({ nombre: 'Test Jest', tripulacion: TRIPULACION_PRUEBA });
 
     expect(respuesta.status).toBe(201);
     expect(respuesta.body.nombre).toBe('Test Jest');

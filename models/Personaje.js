@@ -11,7 +11,8 @@ nombre: {
 },
 tripulacion: {
 
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tripulacion',
     required: true
 },
 
