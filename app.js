@@ -6,6 +6,7 @@ const authRoutes = require("./routes/auth");
 const estadisticasRoutes = require("./routes/estadisticas");
 const tripulacionesRoutes = require('./routes/tripulaciones_routes');
 const multer = require('multer');
+const tripulantesRoutes = require('./routes/tripulantes_routes')
 const app = express();
 
 app.use(cors());
@@ -20,6 +21,7 @@ app.use("/atletas", atletasRoutes);
 app.use("/auth", authRoutes);
 app.use("/estadisticas",estadisticasRoutes)
 app.use("/tripulaciones",tripulacionesRoutes)
+app.use("/tripulantes", tripulantesRoutes)
 
 app.use((err, req, res, next) => {
   if (err.status === 415) {
