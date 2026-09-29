@@ -3,6 +3,8 @@ const Personaje = require('../models/Personaje')
 const subirImagen = require('../utils/subirImagen')
 const borrarImagen = require('../utils/borrarImagen')
 const mongoose = require('mongoose')
+const Tripulante = require('../models/Tripulante')
+
 
 exports.crear = async (req, res) => {
 
@@ -161,15 +163,21 @@ exports.obtenerPersonajes = async (req, res) => {
 
     try {
 
-        const tripulacion = await Tripulacion.findById(req.params.id);
 
-        if (!tripulacion) {
-            return res.status(404).json({ message: 'Tripulacion no encontrada' });
-        }
+            
 
-        const personajes = await Personaje.find({ tripulacion: req.params.id });
+            
 
-        res.json(personajes);
+            const personajes = await Personaje.find({ tripulacion: req.params.id})
+            const tripulantes = await Tripulante.find({ tripulacion: req.params.id})
+            
+            const miembros = [
+
+                ...personajes.map((p) => ({...p.toObject(), tipo: 'personaje'})),
+                ...tripulantes.map((t) => ({ ...t.toObject(), tipo: 'tripulante'}))
+            ]
+
+            res.json(miembros);
     }
 
     catch (error) {
