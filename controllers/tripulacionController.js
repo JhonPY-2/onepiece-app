@@ -185,3 +185,50 @@ exports.obtenerPersonajes = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+exports.obtenerRecompensaTotal = async (req, res) => {
+
+    try {
+
+        const { id } = req.params
+
+        if (!mongoose.isValidObjectId(id)) {
+
+            return res.status(400).json({ message: 'Id de tripulacion invalido' });
+        }
+
+        const idTripulacion = new mongoose.Types.ObjectId(id)
+
+        const tripulacion = await Tripulacion.findById(idTripulacion)
+
+        if (!tripulacion) {
+
+            return res.status(404).json({ message: 'Tripulacion no encontrada' });
+        }
+
+        const [sumaPersonajes, sumaTripulantes] = await Promise.all([
+
+            Personaje.aggregate([
+
+                { $match: { tripulacion: idTripulacion } },
+                { $group: { _id: null, total: { $sum: '$recompensa' } } }
+            ]),
+
+            Tripulante.aggregate([
+
+                { $match: { tripulacion: idTripulacion } },
+                { $group: { _id: null, total: { $sum: '$recompensa' } } }
+            ])
+        ])
+
+        const recompensaTotal = (sumaPersonajes[0]?.total ?? 0) + (sumaTripulantes[0]?.total ?? 0)
+
+        res.json({ recompensaTotal });
+    }
+
+    catch (error) {
+
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -26,4 +26,7 @@ router.put('/:id', verificarToken, upload.fields([{name: 'imagen', maxCount: 1},
 router.get('/:id/personajes', tripulacionController.obtenerPersonajes)
 
 
+router.get('/:id/recompensa-total', tripulacionController.obtenerRecompensaTotal)
+
+
 module.exports = router;

@@ -165,6 +165,8 @@ El MongoDB del compose usa el volumen con nombre `mongo_data` y **empieza vacío
 | PATCH | `/auth/completar-perfil` | Completar `username` en usuarios antiguos | Sí |
 | GET | `/personajes`, `/atletas` | Listar y ver detalle | No |
 | POST / PUT / DELETE | `/personajes`, `/atletas` | Crear, editar y borrar (foto en el campo `imagen`, multipart) | Sí |
+| GET | `/tripulaciones/:id/personajes` | Miembros de una tripulación, con `tipo: 'personaje' \| 'tripulante'` | No |
+| GET | `/tripulaciones/:id/recompensa-total` | Suma de las recompensas de todos sus miembros. `404` si la tripulación no existe, `400` si el id no es un ObjectId | No |
 | GET | `/estadisticas/resumen` | Resumen calculado por el microservicio | No |
 
 Las rutas protegidas usan el encabezado `Authorization: Bearer <token>`.

@@ -12,6 +12,8 @@ const borrarImagen = require('../utils/borrarImagen');
 
 const app = require('../app');
 const Tripulacion = require('../models/Tripulacion');
+const Personaje = require('../models/Personaje');
+const Tripulante = require('../models/Tripulante');
 
 const tokenValido = jwt.sign(
   { id: new mongoose.Types.ObjectId().toString() },
@@ -133,6 +135,115 @@ describe('Rutas de Tripulaciones - integracion', () => {
     expect(borrarImagen).toHaveBeenCalledTimes(2);
 
     idTripulacionCreada = null;
+  });
+
+});
+
+
+describe('GET /tripulaciones/:id/recompensa-total - integracion', () => {
+
+  const NOMBRE_TRIPULACION = 'Crew Recompensa Total';
+
+  let idTripulacionRecompensa;
+
+  const crearPersonaje = (nombre, recompensa) => Personaje.create({
+    nombre,
+    tripulacion: idTripulacionRecompensa,
+    recompensa
+  });
+
+  const crearTripulante = (nombre, recompensa) => Tripulante.create({
+    nombre,
+    tripulacion: idTripulacionRecompensa,
+    recompensa
+  });
+
+  beforeAll(async () => {
+    const tripulacion = await Tripulacion.create({
+      nombre: NOMBRE_TRIPULACION,
+      capitan: 'Capitan Prueba Recompensa'
+    });
+
+    idTripulacionRecompensa = tripulacion._id;
+  });
+
+  afterAll(async () => {
+    await Personaje.deleteMany({ tripulacion: idTripulacionRecompensa });
+    await Tripulante.deleteMany({ tripulacion: idTripulacionRecompensa });
+    await Tripulacion.findByIdAndDelete(idTripulacionRecompensa);
+  });
+
+  afterEach(async () => {
+    await Personaje.deleteMany({ tripulacion: idTripulacionRecompensa });
+    await Tripulante.deleteMany({ tripulacion: idTripulacionRecompensa });
+  });
+
+  test('debe ser publico (sin token) y sumar personajes y tripulantes', async () => {
+    await Promise.all([
+      crearPersonaje('Personaje Recompensa A', 3000),
+      crearPersonaje('Personaje Recompensa B', 2000)
+    ]);
+    await Promise.all([
+      crearTripulante('Tripulante Recompensa A', 500),
+      crearTripulante('Tripulante Recompensa B', 500)
+    ]);
+
+    const respuesta = await request(app)
+      .get(`/tripulaciones/${idTripulacionRecompensa}/recompensa-total`);
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body).toEqual({ recompensaTotal: 6000 });
+  });
+
+  test('debe sumar solo la coleccion que tenga miembros', async () => {
+    await Promise.all([
+      crearPersonaje('Personaje Solo Reward A', 1000),
+      crearPersonaje('Personaje Solo Reward B', 2000)
+    ]);
+
+    const respuesta = await request(app)
+      .get(`/tripulaciones/${idTripulacionRecompensa}/recompensa-total`);
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body).toEqual({ recompensaTotal: 3000 });
+  });
+
+  test('debe ignorar a los miembros cuya recompensa viene vacia o ausente', async () => {
+    await crearPersonaje('Personaje Con Recompensa', 4000);
+    await crearPersonaje('Personaje Sin Recompensa', undefined);
+    await crearTripulante('Tripulante En Cero', 0);
+
+    const respuesta = await request(app)
+      .get(`/tripulaciones/${idTripulacionRecompensa}/recompensa-total`);
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body).toEqual({ recompensaTotal: 4000 });
+  });
+
+  test('una tripulacion existente sin miembros debe devolver 0', async () => {
+    const respuesta = await request(app)
+      .get(`/tripulaciones/${idTripulacionRecompensa}/recompensa-total`);
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body).toEqual({ recompensaTotal: 0 });
+  });
+
+  test('una tripulacion inexistente debe fallar con 404', async () => {
+    const idInexistente = new mongoose.Types.ObjectId();
+
+    const respuesta = await request(app)
+      .get(`/tripulaciones/${idInexistente}/recompensa-total`);
+
+    expect(respuesta.status).toBe(404);
+    expect(respuesta.body.message).toBe('Tripulacion no encontrada');
+  });
+
+  test('un id malformado debe fallar con 400 y no con 500', async () => {
+    const respuesta = await request(app)
+      .get('/tripulaciones/no-es-un-objectid/recompensa-total');
+
+    expect(respuesta.status).toBe(400);
+    expect(respuesta.body.message).toBe('Id de tripulacion invalido');
   });
 
 });
