@@ -1,5 +1,6 @@
 const mogoose = require('mongoose');
 const Personaje = require('../models/Personaje');
+const Tripulacion = require('../models/Tripulacion');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -8,7 +9,7 @@ dotenv.config();
 const personajesDePrueba = [
   {
     nombre: "Monkey D. Luffy",
-    tripulacion: "Sombrero de Paja",
+    tripulacion: null,
     frutaDiablo: {
       nombre: "Gomu Gomu no Mi",
       tipo: "Paramecia",
@@ -20,21 +21,21 @@ const personajesDePrueba = [
   },
   {
     nombre: "Roronoa Zoro",
-    tripulacion: "Sombrero de Paja",
+    tripulacion: null,
     recompensa: 1111000000,
     habilidades: ["Ashura", "Santoryu", "Haki del Armamento"],
     arcos: ["East Blue", "Baratie", "Marineford", "Wano"]
   },
   {
     nombre: "Nami",
-    tripulacion: "Sombrero de Paja",
+    tripulacion: null,
     recompensa: 366000000,
     habilidades: ["Clima-Tact", "Navegación experta"],
     arcos: ["East Blue", "Arlong Park", "Skypiea", "Wano"]
   },
   {
     nombre: "Nico Robin",
-    tripulacion: "Sombrero de Paja",
+    tripulacion: null,
     frutaDiablo: {
       nombre: "Hana Hana no Mi",
       tipo: "Paramecia",
@@ -46,14 +47,14 @@ const personajesDePrueba = [
   },
   {
     nombre: "Vinsmoke Sanji",
-    tripulacion: "Sombrero de Paja",
+    tripulacion: null,
     recompensa: 1032000000,
     habilidades: ["Diable Jambe", "Cocina experta"],
     arcos: ["Baratie", "Whole Cake Island", "Wano"]
   },
   {
     nombre: "Tony Tony Chopper",
-    tripulacion: "Sombrero de Paja",
+    tripulacion: null,
     frutaDiablo: {
       nombre: "Hito Hito no Mi",
       tipo: "Zoan",
@@ -65,7 +66,7 @@ const personajesDePrueba = [
   },
   {
     nombre: "Trafalgar Law",
-    tripulacion: "Piratas de Heart",
+    tripulacion: null,
     frutaDiablo: {
       nombre: "Ope Ope no Mi",
       tipo: "Paramecia",
@@ -90,6 +91,30 @@ async function seed() {
             await Personaje.deleteMany({});
             console.log('Colección de personajes limpiada');
 
+            // Crear/obtener tripulaciones (upsert por nombre con $setOnInsert para no pisar datos existentes)
+            const [sombrero, heart] = await Promise.all([
+                Tripulacion.findOneAndUpdate(
+                    { nombre: 'Sombrero de Paja' },
+                    { $setOnInsert: { nombre: 'Sombrero de Paja', capitan: 'Monkey D. Luffy' } },
+                    { upsert: true, new: true }
+                ),
+                Tripulacion.findOneAndUpdate(
+                    { nombre: 'Piratas de Heart' },
+                    { $setOnInsert: { nombre: 'Piratas de Heart', capitan: 'Trafalgar Law' } },
+                    { upsert: true, new: true }
+                )
+            ]);
+
+            // Asignar ObjectIds a los personajes
+            const idSombrero = sombrero._id;
+            const idHeart = heart._id;
+            personajesDePrueba[0].tripulacion = idSombrero;  // Luffy
+            personajesDePrueba[1].tripulacion = idSombrero;  // Zoro
+            personajesDePrueba[2].tripulacion = idSombrero;  // Nami
+            personajesDePrueba[3].tripulacion = idSombrero;  // Robin
+            personajesDePrueba[4].tripulacion = idSombrero;  // Sanji
+            personajesDePrueba[5].tripulacion = idSombrero;  // Chopper
+            personajesDePrueba[6].tripulacion = idHeart;     // Law
 
             const resultado = await Personaje.insertMany(personajesDePrueba);
             console.log(`Se han insertado ${resultado.length} personajes insetados correctamente`);
