@@ -56,6 +56,7 @@ dotenv no sobreescribe variables ya definidas. En CI sí hay base aparte (`onepi
 - **Pregunta antes**: de romper el contrato de error (`error` vs `message`), de tocar el microservicio Python o el frontend (repos hermanos), y de cualquier cambio de schema que afecte a la BD.
 - **Nunca**: commitees a `master` ni abras PR sin que lo pidan; no toques ni subas `.env`; no corras `npm test` contra la BD de desarrollo sin el override; no ejecutes migraciones sin `--aplicar` y sin confirmar.
 - `npm run seed` ejecuta `Personaje.deleteMany({})` y borra todos los personajes: nunca lo corras contra la base onepiece; usa `MONGODB_URI=mongodb://127.0.0.1:27017/onepiece_agente_scratch`.
+- Lee `docs/constitution.md` y la spec activa (`specs/NNN-*/`) antes de tocar código.
 
 ## Verificación
 
