@@ -95,3 +95,37 @@ describe('Rutas de Personajes - integracion', () => {
   });
 
 });
+
+describe('GET /personajes/ranking - T1', () => {
+
+  let tripulacionId;
+
+  beforeAll(async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const t = await Tripulacion.create({ nombre: 'Sombrero de Paja', capitan: 'Luffy' });
+    tripulacionId = t._id;
+  });
+
+  afterAll(async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    await Tripulacion.findByIdAndDelete(tripulacionId);
+  });
+
+  test('GET /personajes/ranking sin token devuelve 200 y array', async () => {
+    const res = await request(app).get('/personajes/ranking');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /personajes/ranking devuelve hasta 10 personajes ordenados por recompensa descendente', async () => {
+    const res = await request(app).get('/personajes/ranking');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeLessThanOrEqual(10);
+    if (res.body.length > 1) {
+      for (let i = 0; i < res.body.length - 1; i++) {
+        expect(res.body[i].recompensa).toBeGreaterThanOrEqual(res.body[i + 1].recompensa);
+      }
+    }
+  });
+
+});

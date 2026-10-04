@@ -107,3 +107,17 @@ exports.obtenerPorId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.obtenerRanking = async (req, res) => {
+  try {
+    const limit = 10;
+    const pipeline = [
+      { $sort: { recompensa: -1 } },
+      { $limit: limit }
+    ];
+    const resultados = await Personaje.aggregate(pipeline);
+    res.json(resultados);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

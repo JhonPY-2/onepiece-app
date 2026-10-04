@@ -6,6 +6,7 @@ const upload = require('../middleware/upload')
 
 router.post('/', verificarToken, upload.single('imagen'), personajeController.crear);
 router.get('/', personajeController.obtenerTodos);
+router.get('/ranking', personajeController.obtenerRanking);
 router.put('/:id', verificarToken, upload.single('imagen'), personajeController.actualizar);
 router.delete('/:id', verificarToken, personajeController.eliminar);
 router.get('/:id', personajeController.obtenerPorId);

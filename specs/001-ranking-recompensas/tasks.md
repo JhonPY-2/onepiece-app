@@ -1,6 +1,6 @@
 # specs/001-ranking-recompensas/tasks.md
 
-- [ ] **T1. Ruta `/ranking` antes de `/:id` + `obtenerRanking` básico (top 10, orden desc).** RF-01, RF-02
+- [x] **T1. Ruta `/ranking` antes de `/:id` + `obtenerRanking` básico (top 10, orden desc).** RF-01, RF-02
   - Tests: `GET /personajes/ranking` → 200, array plano ≤10, orden recompensa desc.
   - Código: `router.get('/ranking', ...)` **antes** de `/:id`; `exports.obtenerRanking` con agregación `$sort { recompensa: -1 }`, `$limit: 10`, sin validación de limit aún.
   - Hecho cuando: tests de T1 pasan (200, array ≤10, orden desc) y no se rompen tests existentes.
