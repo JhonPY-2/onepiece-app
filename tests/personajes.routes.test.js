@@ -128,4 +128,53 @@ describe('GET /personajes/ranking - T1', () => {
     }
   });
 
+  // T2 - Validación de limit
+  test('GET /personajes/ranking con limit=0 devuelve 400', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=0');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  test('GET /personajes/ranking con limit=51 devuelve 400', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=51');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  test('GET /personajes/ranking con limit=abc devuelve 400', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=abc');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  test('GET /personajes/ranking con limit=10.5 devuelve 400', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=10.5');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  test('GET /personajes/ranking con limit vacío devuelve 400', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  test('GET /personajes/ranking con limit repetido devuelve 400', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=10&limit=20');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  test('GET /personajes/ranking con limit=5 devuelve 200 y 5 items', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=5');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeLessThanOrEqual(5);
+  });
+
+  test('GET /personajes/ranking con limit=50 devuelve 200 y hasta 50 items', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=50');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeLessThanOrEqual(50);
+  });
+
 });

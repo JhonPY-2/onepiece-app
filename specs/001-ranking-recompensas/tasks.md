@@ -5,7 +5,7 @@
   - Código: `router.get('/ranking', ...)` **antes** de `/:id`; `exports.obtenerRanking` con agregación `$sort { recompensa: -1 }`, `$limit: 10`, sin validación de limit aún.
   - Hecho cuando: tests de T1 pasan (200, array ≤10, orden desc) y no se rompen tests existentes.
 
-- [ ] **T2. Validación estricta de `limit` (1–50, regex).** RF-03, RF-04
+- [x] **T2. Validación estricta de `limit` (1–50, regex).** RF-03, RF-04
   - Tests: `limit=0`, `51`, `abc`, `10.5`, ``, `10&limit=20` → 400 `{ message }`; `limit=5`, `50` → 200 con cantidad exacta.
   - Código: en `obtenerRanking`, validación `typeof limitRaw === 'string' && /^[0-9]+$/.test(limitRaw)` + rango 1–50; 400 con `{ message: "El parámetro limit debe ser un entero entre 1 y 50" }`.
   - Hecho cuando: tests de T2 pasan (400 en inválidos, 200 con cantidad correcta en válidos) y T1 sigue verde.

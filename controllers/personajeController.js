@@ -110,7 +110,20 @@ exports.obtenerPorId = async (req, res) => {
 
 exports.obtenerRanking = async (req, res) => {
   try {
-    const limit = 10;
+    const limitRaw = req.query.limit;
+    let limit = 10;
+
+    if (limitRaw !== undefined) {
+      if (typeof limitRaw !== 'string' || !/^[0-9]+$/.test(limitRaw)) {
+        return res.status(400).json({ message: 'El parámetro limit debe ser un entero entre 1 y 50' });
+      }
+      const limitNum = parseInt(limitRaw, 10);
+      if (limitNum < 1 || limitNum > 50) {
+        return res.status(400).json({ message: 'El parámetro limit debe ser un entero entre 1 y 50' });
+      }
+      limit = limitNum;
+    }
+
     const pipeline = [
       { $sort: { recompensa: -1 } },
       { $limit: limit }
