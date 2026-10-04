@@ -126,7 +126,7 @@ exports.obtenerRanking = async (req, res) => {
     }
 
     const pipeline = [
-      { $sort: { recompensa: -1 } },
+      { $sort: { recompensa: -1, nombre: 1 } },
       { $limit: limit },
       {
         $lookup: {
@@ -152,7 +152,7 @@ exports.obtenerRanking = async (req, res) => {
       }
     ];
 
-    const resultados = await Personaje.aggregate(pipeline);
+    const resultados = await Personaje.aggregate(pipeline).collation({ locale: 'es', strength: 2 });
     res.json(resultados);
   } catch (error) {
     res.status(500).json({ message: error.message });

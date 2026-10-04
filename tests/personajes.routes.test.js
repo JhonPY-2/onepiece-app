@@ -236,3 +236,47 @@ describe('GET /personajes/ranking - T1', () => {
   });
 
 });
+
+describe('GET /personajes/ranking - T4', () => {
+
+  let tripulacionId;
+
+  beforeAll(async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const t = await Tripulacion.create({ nombre: 'Tripulacion T4', capitan: 'Capitan T4' });
+    tripulacionId = t._id;
+  });
+
+  afterAll(async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const Personaje = require('../models/Personaje');
+    await Personaje.deleteMany({ tripulacion: tripulacionId });
+    await Tripulacion.findByIdAndDelete(tripulacionId);
+  });
+
+  test('desempate por recompensa: orden ascendente por nombre case-insensitive (strength:2)', async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const Personaje = require('../models/Personaje');
+    const t = await Tripulacion.create({ nombre: 'Tripulacion T4 Desempate', capitan: 'Capitan' });
+    await Personaje.create([
+      { nombre: 'arlong', recompensa: 999999999, tripulacion: t._id },
+      { nombre: 'Bartolomeo', recompensa: 999999999, tripulacion: t._id },
+      { nombre: 'Álvaro', recompensa: 999999999, tripulacion: t._id },
+      { nombre: 'zorro', recompensa: 999999999, tripulacion: t._id }
+    ]);
+
+    const res = await request(app).get('/personajes/ranking?limit=10');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThanOrEqual(4);
+
+    const desempatados = res.body
+      .filter(e => e.recompensa === 999999999)
+      .map(e => e.nombre);
+
+    expect(desempatados).toEqual(['Álvaro', 'arlong', 'Bartolomeo', 'zorro']);
+
+    await Personaje.deleteMany({ tripulacion: t._id });
+    await require('../models/Tripulacion').findByIdAndDelete(t._id);
+  });
+
+});

@@ -15,7 +15,7 @@
   - Código: `$lookup` con `Tripulacion.collection.name`, `$project` con `_id:0` y `$cond` para `tripulacion` (nombre o `null`).
   - Hecho cuando: tests de T3 pasan (keys exactas, tripulacion string/null) y T1–T2 siguen verdes.
 
-- [ ] **T4. Desempate por nombre case-insensitive (collation).** RF-06
+- [x] **T4. Desempate por nombre case-insensitive (collation).** RF-06
   - Tests: varios personajes con misma recompensa, nombres "zorro", "Zorro", "Álvaro" → orden asc case-insensitive (strength:2).
   - Código: `Personaje.aggregate(pipeline).collation({ locale: 'es', strength: 2 })`.
   - Hecho cuando: tests de T4 pasan (orden correcto con "zorro"/"Zorro"/"Álvaro") y T1–T3 siguen verdes.
