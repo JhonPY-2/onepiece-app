@@ -96,6 +96,64 @@ describe('Rutas de Personajes - integracion', () => {
 
 });
 
+describe('GET /personajes/ranking - T3', () => {
+
+  test('cada entrada tiene exactamente nombre, recompensa y tripulacion (string), sin _id', async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const Personaje = require('../models/Personaje');
+    const t = await Tripulacion.create({ nombre: 'Piratas del Sol', capitan: 'Capitan Sol' });
+    await Personaje.create([
+      { nombre: 'P1', recompensa: 1000, tripulacion: t._id },
+      { nombre: 'P2', recompensa: 2000, tripulacion: t._id }
+    ]);
+
+    const res = await request(app).get('/personajes/ranking?limit=5');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThanOrEqual(2);
+
+    res.body.forEach(entrada => {
+      const keys = Object.keys(entrada).sort();
+      expect(keys).toEqual(['nombre', 'recompensa', 'tripulacion']);
+      expect(typeof entrada.nombre).toBe('string');
+      expect(typeof entrada.recompensa).toBe('number');
+      expect(typeof entrada.tripulacion).toBe('string');
+    });
+
+    // limpiar
+    await Personaje.deleteMany({ tripulacion: t._id });
+    await require('../models/Tripulacion').findByIdAndDelete(t._id);
+  });
+
+  test('tripulacion es el nombre de la tripulación, no ObjectId', async () => {
+    const res = await request(app).get('/personajes/ranking?limit=2');
+    expect(res.status).toBe(200);
+    res.body.forEach(entrada => {
+      if (entrada.tripulacion !== null) {
+        expect(typeof entrada.tripulacion).toBe('string');
+        expect(entrada.tripulacion).not.toMatch(/^[0-9a-fA-F]{24}$/);
+      }
+    });
+  });
+
+  test('personaje sin tripulación válida tiene tripulacion: null', async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const Personaje = require('../models/Personaje');
+    const t = await Tripulacion.create({ nombre: 'Tripulacion Temporal', capitan: 'Temp' });
+    const p = await Personaje.create({ nombre: 'Sin Tripulacion', recompensa: 999999999, tripulacion: t._id });
+    await Tripulacion.findByIdAndDelete(t._id);
+
+    const res = await request(app).get('/personajes/ranking?limit=10');
+    expect(res.status).toBe(200);
+    const entrada = res.body.find(e => e.nombre === 'Sin Tripulacion');
+    expect(entrada).toBeDefined();
+    expect(entrada.tripulacion).toBeNull();
+
+    await Personaje.deleteMany({ _id: p._id });
+  });
+
+});
+
 describe('GET /personajes/ranking - T1', () => {
 
   let tripulacionId;

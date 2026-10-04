@@ -1,4 +1,5 @@
 const Personaje = require('../models/Personaje');
+const Tripulacion = require('../models/Tripulacion');
 const subirImagen = require('../utils/subirImagen');
 const borrarImagen = require('../utils/borrarImagen');
 const normalizarPersonaje = require('../utils/normalizarPersonaje');
@@ -126,8 +127,31 @@ exports.obtenerRanking = async (req, res) => {
 
     const pipeline = [
       { $sort: { recompensa: -1 } },
-      { $limit: limit }
+      { $limit: limit },
+      {
+        $lookup: {
+          from: Tripulacion.collection.name,
+          localField: 'tripulacion',
+          foreignField: '_id',
+          as: 'tripulacionData'
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          nombre: 1,
+          recompensa: 1,
+          tripulacion: {
+            $cond: [
+              { $gt: [{ $size: '$tripulacionData' }, 0] },
+              { $arrayElemAt: ['$tripulacionData.nombre', 0] },
+              null
+            ]
+          }
+        }
+      }
     ];
+
     const resultados = await Personaje.aggregate(pipeline);
     res.json(resultados);
   } catch (error) {

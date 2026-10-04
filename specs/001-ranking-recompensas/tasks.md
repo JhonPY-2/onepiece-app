@@ -10,7 +10,7 @@
   - Código: en `obtenerRanking`, validación `typeof limitRaw === 'string' && /^[0-9]+$/.test(limitRaw)` + rango 1–50; 400 con `{ message: "El parámetro limit debe ser un entero entre 1 y 50" }`.
   - Hecho cuando: tests de T2 pasan (400 en inválidos, 200 con cantidad correcta en válidos) y T1 sigue verde.
 
-- [ ] **T3. Forma exacta de la respuesta + tripulación (populate).** RF-05
+- [x] **T3. Forma exacta de la respuesta + tripulación (populate).** RF-05
   - Tests: cada entrada tiene **exactamente** `nombre`, `recompensa`, `tripulacion` (string o `null`); sin `_id` ni otros campos.
   - Código: `$lookup` con `Tripulacion.collection.name`, `$project` con `_id:0` y `$cond` para `tripulacion` (nombre o `null`).
   - Hecho cuando: tests de T3 pasan (keys exactas, tripulacion string/null) y T1–T2 siguen verdes.
