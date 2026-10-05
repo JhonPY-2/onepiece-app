@@ -179,12 +179,41 @@ describe('GET /personajes/ranking - T1', () => {
   });
 
   test('GET /personajes/ranking devuelve hasta 10 personajes ordenados por recompensa descendente', async () => {
-    const res = await request(app).get('/personajes/ranking');
-    expect(res.status).toBe(200);
-    expect(res.body.length).toBeLessThanOrEqual(10);
-    if (res.body.length > 1) {
-      for (let i = 0; i < res.body.length - 1; i++) {
-        expect(res.body[i].recompensa).toBeGreaterThanOrEqual(res.body[i + 1].recompensa);
+    const Tripulacion = require('../models/Tripulacion');
+    const Personaje = require('../models/Personaje');
+    const idsCreados = [];
+    let tripulacionTestId = null;
+
+    try {
+      // Crear 12 personajes con recompensas distintas para probar límite por defecto
+      const tripulacionTest = await Tripulacion.create({ nombre: 'Tripulacion T7 Test', capitan: 'Capitan T7' });
+      tripulacionTestId = tripulacionTest._id;
+
+      const personajesACrear = [];
+      for (let i = 1; i <= 12; i++) {
+        personajesACrear.push({
+          nombre: `T7 Prueba ${i.toString().padStart(2, '0')}`,
+          recompensa: 1000000 + (i * 1000),
+          tripulacion: tripulacionTest._id
+        });
+      }
+      const creados = await Personaje.insertMany(personajesACrear);
+      creados.forEach(p => idsCreados.push(p._id));
+
+      const res = await request(app).get('/personajes/ranking');
+      expect(res.status).toBe(200);
+      expect(res.body.length).toBe(10);
+      if (res.body.length > 1) {
+        for (let i = 0; i < res.body.length - 1; i++) {
+          expect(res.body[i].recompensa).toBeGreaterThanOrEqual(res.body[i + 1].recompensa);
+        }
+      }
+    } finally {
+      if (idsCreados.length > 0) {
+        await Personaje.deleteMany({ _id: { $in: idsCreados } });
+      }
+      if (tripulacionTestId) {
+        await Tripulacion.findByIdAndDelete(tripulacionTestId);
       }
     }
   });
@@ -227,15 +256,48 @@ describe('GET /personajes/ranking - T1', () => {
   });
 
   test('GET /personajes/ranking con limit=5 devuelve 200 y 5 items', async () => {
-    const res = await request(app).get('/personajes/ranking?limit=5');
-    expect(res.status).toBe(200);
-    expect(res.body.length).toBeLessThanOrEqual(5);
+    const Tripulacion = require('../models/Tripulacion');
+    const Personaje = require('../models/Personaje');
+    const idsCreados = [];
+    let tripulacionTestId = null;
+
+    try {
+      const countAntes = await Personaje.countDocuments();
+      // Crear 12 personajes si no hay suficientes para el test
+      if (countAntes < 12) {
+        const tripulacionTest = await Tripulacion.create({ nombre: 'Tripulacion T7 Limit5', capitan: 'Capitan' });
+        tripulacionTestId = tripulacionTest._id;
+        for (let i = 1; i <= 12; i++) {
+          const p = await Personaje.create({
+            nombre: `T7 Limit5 ${i.toString().padStart(2, '0')}`,
+            recompensa: 500000 + (i * 500),
+            tripulacion: tripulacionTest._id
+          });
+          idsCreados.push(p._id);
+        }
+      }
+
+      const res = await request(app).get('/personajes/ranking?limit=5');
+      expect(res.status).toBe(200);
+      expect(res.body.length).toBe(5);
+    } finally {
+      if (idsCreados.length > 0) {
+        await Personaje.deleteMany({ _id: { $in: idsCreados } });
+      }
+      if (tripulacionTestId) {
+        await Tripulacion.findByIdAndDelete(tripulacionTestId);
+      }
+    }
   });
 
   test('GET /personajes/ranking con limit=50 devuelve 200 y hasta 50 items', async () => {
+    const Personaje = require('../models/Personaje');
+
+    const countTotal = await Personaje.countDocuments();
     const res = await request(app).get('/personajes/ranking?limit=50');
     expect(res.status).toBe(200);
-    expect(res.body.length).toBeLessThanOrEqual(50);
+    // Debe devolver exactamente todos los que hay, nunca más de 50
+    expect(res.body.length).toBe(Math.min(countTotal, 50));
   });
 
 });
