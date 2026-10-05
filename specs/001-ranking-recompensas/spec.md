@@ -1,6 +1,6 @@
 # specs/001-ranking-recompensas/spec.md
 
-**Estado: aprobada**
+**Estado: implementada**
 
 ## Contexto y objetivo
 Endpoint público que devuelve el ranking de personajes por recompensa (mayor primero), permitiendo limitar la cantidad de resultados. Sirve para mostrar "los más buscados" sin lógica en el cliente.
