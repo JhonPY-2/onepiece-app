@@ -20,7 +20,7 @@
   - Código: `Personaje.aggregate(pipeline).collation({ locale: 'es', strength: 2 })`.
   - Hecho cuando: tests de T4 pasan (orden correcto con "zorro"/"Zorro"/"Álvaro") y T1–T3 siguen verdes.
 
-- [ ] **T5. Colección vacía + casos límite extra.** RF-07, casos límite
+- [x] **T5. Colección vacía + casos límite extra.** RF-07, casos límite
   - Tests: colección vacía → 200 `[]`; recompensa 0 incluida; `tripulacion: null` sin tripulación; `?foo=bar` ignorado; parámetros extra no rompen.
   - Código: agregación ya maneja vacío (devuelve `[]`); `$cond` ya da `null`; parámetros extra se ignoran por no usarse.
   - Hecho cuando: tests de T5 pasan y T1–T4 siguen verdes.

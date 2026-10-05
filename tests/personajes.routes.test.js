@@ -7,6 +7,9 @@ const request = require('supertest');
 const app = require('../app');
 const Personaje = require('../models/Personaje');
 
+// URI de la base de pruebas (hardcoded para evitar problemas con .env)
+const MONGODB_URI_TEST = 'mongodb://127.0.0.1:27017/onepiece_agente_scratch';
+
 const tokenValido = jwt.sign(
   { id: '123', email: 'test@onepiece.com' },
   process.env.JWT_SECRET,
@@ -18,7 +21,7 @@ const TRIPULACION_PRUEBA = new mongoose.Types.ObjectId();
 let idPersonajeCreado;
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(MONGODB_URI_TEST);
 });
 
 afterAll(async () => {
@@ -277,6 +280,96 @@ describe('GET /personajes/ranking - T4', () => {
 
     await Personaje.deleteMany({ tripulacion: t._id });
     await require('../models/Tripulacion').findByIdAndDelete(t._id);
+  });
+
+});
+
+describe('GET /personajes/ranking - T5', () => {
+
+  // Constante FIJA: la única base permitida para esta prueba masiva
+  const BASE_DE_PRUEBAS = 'onepiece_agente_scratch';
+
+  test('colección vacía → 200 con []: verifica base y restaura', async () => {
+    // Verificar que estamos en la base de pruebas ANTES de cualquier deleteMany masivo
+    if (mongoose.connection.name !== BASE_DE_PRUEBAS) {
+      throw new Error(`Prueba abortada: se esperaba la base ${BASE_DE_PRUEBAS} y la conexión es ${mongoose.connection.name}`);
+    }
+
+    // Backup: guardar todos los documentos existentes
+    const backup = await Personaje.collection.find().toArray();
+
+    try {
+      // Vaciar la colección
+      await Personaje.collection.deleteMany({});
+
+      const res = await request(app).get('/personajes/ranking?limit=10');
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body).toEqual([]);
+    } finally {
+      // Restaurar documentos originales
+      if (backup.length > 0) {
+        await Personaje.collection.insertMany(backup);
+      }
+    }
+  });
+
+  test('personaje con recompensa 0 aparece en el ranking', async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const Personaje = require('../models/Personaje');
+    const t = await Tripulacion.create({ nombre: 'Tripulacion Recompensa Cero', capitan: 'Capitan' });
+    // Crear con recompensa 0
+    const p = await Personaje.create({ nombre: 'Recompensa Cero', recompensa: 0, tripulacion: t._id });
+
+    try {
+      // Verificar que el personaje existe en la BD con recompensa 0
+      const enBD = await Personaje.findById(p._id);
+      expect(enBD).toBeDefined();
+      expect(enBD.recompensa).toBe(0);
+
+      // Verificar que el endpoint devuelve al personaje: buscamos por nombre en el ranking
+      // La prueba asume que onepiece_agente_scratch tiene menos de 50 personajes
+      const res = await request(app).get('/personajes/ranking?limit=50');
+      expect(res.status).toBe(200);
+      const entrada = res.body.find(e => e.nombre === 'Recompensa Cero');
+      expect(entrada).toBeDefined();
+      expect(entrada.recompensa).toBe(0);
+    } finally {
+      await Personaje.deleteMany({ _id: p._id });
+      await Tripulacion.findByIdAndDelete(t._id);
+    }
+  });
+
+  test('personaje sin tripulación válida aparece con tripulacion: null (insertOne sin validar)', async () => {
+    const Tripulacion = require('../models/Tripulacion');
+    const t = await Tripulacion.create({ nombre: 'Tripulacion Para Borrar', capitan: 'Temp' });
+    // Insertar sin validar: tripulacion referencia un ObjectId que luego borraremos
+    const p = await Personaje.collection.insertOne({
+      nombre: 'Sin Tripulacion T5',
+      recompensa: 999999999,
+      tripulacion: t._id
+    });
+    await Tripulacion.findByIdAndDelete(t._id);
+
+    try {
+      const res = await request(app).get('/personajes/ranking?limit=20');
+      expect(res.status).toBe(200);
+      const entrada = res.body.find(e => e.nombre === 'Sin Tripulacion T5');
+      expect(entrada).toBeDefined();
+      expect(entrada.tripulacion).toBeNull();
+    } finally {
+      await Personaje.deleteMany({ _id: p.insertedId });
+    }
+  });
+
+  test('parámetros desconocidos (?foo=bar) se ignoran y responden 200', async () => {
+    const resSinParams = await request(app).get('/personajes/ranking');
+    expect(resSinParams.status).toBe(200);
+    expect(Array.isArray(resSinParams.body)).toBe(true);
+
+    const resConParams = await request(app).get('/personajes/ranking?foo=bar&otro=123');
+    expect(resConParams.status).toBe(200);
+    expect(resConParams.body).toEqual(resSinParams.body);
   });
 
 });

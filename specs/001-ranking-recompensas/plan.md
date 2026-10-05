@@ -81,6 +81,7 @@ FUNCIÓN obtenerRanking(req, res):
 | **Respuesta 404 no aplica** | Endpoint de lista no falla por "no encontrado"; colección vacía → 200 `[]` (RF-07). | Devolver 404 si vacío: contradice RF-07. |
 | **`_id: 0` en `$project`** | RF-05: "exactamente 3 campos, sin otros". | Dejar `_id`: violaría "sin otros campos". |
 | **Endpoint público (sin `verificarToken`)** | GET son públicos por convención (AGENTS.md §27). RF: "endpoint público". | Protegerlo: rompería HU-01/HU-03 (consumo sin auth). |
+| **Tests de integración en serie (--runInBand)** | Permite probar RF-07 (colección vacía) vaciando y restaurando la colección Personaje de forma segura, sin que tests paralelos interfieran. Cambio de script: `npm test` → `jest --runInBand`. | Filtro inexistente (`?recompesa=...`): la spec deja los filtros fuera de alcance y el endpoint no los implementa. |
 
 ---
 
