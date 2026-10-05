@@ -12,7 +12,7 @@ Principios innegociables. Toda spec, plan y tarea debe cumplirlos.
    `routes/x.js` solo monta y delega. `controllers/xController.js` solo lógica de petición/respuesta (`exports.fn = async (req,res)=>{}`). `models/X.js` solo schema Mongoose. Nada de lógica de negocio en rutas ni de HTTP en modelos.
 
 4. **Tests sólo contra `onepiece_agente_scratch`**  
-   **Nunca** `npm test` sin `MONGODB_URI=mongodb://127.0.0.1:27017/onepiece_agente_scratch`. Tests de integración usan Mongo real; mocks solo en `subirImagen`/`borrarImagen`/`axios`.
+   **Nunca** `npm test` sin `MONGODB_URI=mongodb://127.0.0.1:27017/onepiece_agente_scratch`. Los tests **abortar si el nombre de la base en `MONGODB_URI` no es EXACTAMENTE `onepiece_agente_scratch`** (validación estricta por parsing de URI, sin substring). Tests de integración usan Mongo real; mocks solo en `subirImagen`/`borrarImagen`/`axios`.
 
 5. **Migraciones seguras y datos protegidos**  
    Migraciones con `--aplicar` se prueban **primero** en `onepiece_agente_scratch`. **Nunca** `deleteMany`/`drop` sobre la base real. `npm run seed` igual: solo contra scratch.

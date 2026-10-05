@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --runInBand",
     "seed": "node scripts/seedPersonajes.js",
     "dev": "nodemon index.js"
   },
@@ -26,5 +26,10 @@
     "jest": "^30.5.1",
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup/guardaBaseScratch.js"
+    ]
   }
 }
