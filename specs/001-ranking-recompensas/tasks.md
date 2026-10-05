@@ -25,7 +25,7 @@
   - Código: agregación ya maneja vacío (devuelve `[]`); `$cond` ya da `null`; parámetros extra se ignoran por no usarse.
   - Hecho cuando: tests de T5 pasan y T1–T4 siguen verdes.
 
-- [ ] **T6. Suite completa + verificación manual.** RF-01 a RF-07
+- [x] **T6. Suite completa + verificación manual.** RF-01 a RF-07
   - Ejecutar: `MONGODB_URI="mongodb://127.0.0.1:27017/onepiece_agente_scratch" npm test` → 100% pass.
   - Manual: `MONGODB_URI="mongodb://127.0.0.1:27017/onepiece_agente_scratch" npm run dev` → en otra terminal `curl http://localhost:3000/personajes/ranking` → 200, JSON válido, campos esperados.
   - Hecho cuando: suite completa pasa 100% y comprobación manual en `localhost:3000` responde 200 con JSON correcto.
