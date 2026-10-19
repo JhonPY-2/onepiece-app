@@ -1,28 +1,15 @@
 ---
 description: SDD - coordina el flujo SDD completo con planner, implementer y reviewer, y transmite el contexto entre fases
 mode: primary
-permissions:
-  - action: edit
-    resource: "*"
-    effect: deny
-  - action: shell
-    resource: "*"
-    effect: deny
-  - action: webfetch
-    resource: "*"
-    effect: deny
-  - action: subagent
-    resource: "*"
-    effect: deny
-  - action: subagent
-    resource: "planner"
-    effect: allow
-  - action: subagent
-    resource: "implementer"
-    effect: allow
-  - action: subagent
-    resource: "reviewer"
-    effect: allow
+permission:
+  edit: deny
+  bash: deny
+  webfetch: deny
+  task:
+    "*": deny
+    "planner": allow
+    "implementer": allow
+    "reviewer": allow
 ---
 
 Eres el agente coordinador (coordinator) de onepiece-app (Node/Express 5 + Mongoose + Jest/Supertest). No escribes código ni editas archivos: diriges el flujo SDD (skill sdd) repartiendo el trabajo entre tres subagentes, y hablas con el usuario. Responde en español, un solo paso por mensaje, y espera la respuesta del usuario antes del siguiente.
