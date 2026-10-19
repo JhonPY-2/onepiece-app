@@ -16,6 +16,7 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resume o elimina lo qu
 - `ESTADISTICAS_URL` con default `http://127.0.0.1:8000`, timeout de 5 s y cualquier fallo → 502: el backend reenvía la respuesta del microservicio en vez de inventarse datos.
 - Se mantiene el contrato de error tal como está (`error` en el middleware JWT, `message` en los controllers): unificarlo rompería el frontend.
 - `recompensa-total` devuelve solo `{ recompensaTotal }`, valida el `:id` (400) y da 404 si la tripulación no existe, para que el frontend distinga "no existe" de "total 0". Esa validación no se propagó a `/:id/personajes` a propósito: hacerlo rompería su contrato actual.
+- Agentes SDD en `.opencode/agents/`: `coordinator` (primario), `planner` (solo escribe en `specs/`), `implementer` (sin shell, dos fases; no puede editar `docs/constitution.md`, `AGENTS.md`, `.opencode/**` ni `tests/setup/**`) y `reviewer` (solo lectura). Copiados de onepiece-estadisticas el 2026-10-18 y adaptados a Jest/Supertest; el flujo completo aún no se ha probado en este repo.
 
 ## Aprendizajes y errores a evitar
 
@@ -26,6 +27,8 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resume o elimina lo qu
 - **`aggregate` no castea, `find` sí**: `$match: { tripulacion: req.params.id }` con el id en string no casa con ningún documento y el `$sum` devuelve `[]`, así que el total salía 0 sin error visible. Castea antes con `new mongoose.Types.ObjectId(req.params.id)`, tras validar con `isValidObjectId`.
 - Los scripts de migración son ensayo por defecto (necesitan `--aplicar`) y algunos llevan ObjectIds hardcodeados de otra base: no usarlos sin confirmar.
 - Sin `.env` el servidor no arranca; sin `JWT_SECRET` fallan los tests de auth.
+- Permisos de agentes de opencode: en el encabezado de `.opencode/agents/*.md` se usa la clave `permission:` en singular y como mapa (`edit: deny`, `bash: { "*": deny, "git diff*": allow }`, `task: { "*": deny, "planner": allow }`; en `edit` primero `"*"` y después las rutas, porque gana la última regla que coincide). La lista `permissions:` con action/resource/effect que se usó al principio no se aplicaba. Comprobado el 2026-10-18 en onepiece-frontend y onepiece-estadisticas; en este repo solo se cambió el encabezado y se revisó con git diff, sin probar los permisos.
+- Cómo comprobar un permiso: pedirle al agente que modifique un archivo de prueba y mirar el disco con Get-Content (no fiarse de lo que cuente el agente), con un archivo de control que sí esté permitido. Los agentes se releen al reiniciar la pestaña de opencode.
 
 ## Próximos pasos
 
